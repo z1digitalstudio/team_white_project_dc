@@ -3,6 +3,8 @@ from rest_framework.exceptions import PermissionDenied
 
 from blog_app.models import Blog, Tag
 
+from django.contrib.auth.models import User
+
 
 # --- Funciones auxiliares ---
 def get_user_blog(user):  # Obtiene o crea el blog del usuario.
@@ -34,3 +36,16 @@ def get_or_create_tag_by_name(
     if not tag:
         tag = Tag.objects.create(name=name)
     return tag
+
+
+def create_user(validated_data):  # Crea un usuario y cifra la contraseña.
+
+    user = User.objects.create_user(
+        username=validated_data["username"],
+        email=validated_data.get("email"),
+        password=validated_data["password"],
+    )
+    # Dar acceso al admin
+    user.is_staff = True
+    user.save()
+    return user

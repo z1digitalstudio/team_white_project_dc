@@ -3,6 +3,7 @@ from rest_framework import generics, viewsets
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.permissions import AllowAny
 
+from blog_app.constants import ERROR_BLOG_ALREADY_EXISTS
 from blog_app.helpers import (
     get_or_create_tag_by_name,
     get_user_blog,
@@ -40,7 +41,7 @@ class BlogViewSet(viewsets.ModelViewSet):
 
     def create(self, request, *args, **kwargs):  # noqa: PLR6301
         # Bloquea la creación manual de blogs.
-        raise PermissionDenied("Ya existe un blog creado para este usuario.")
+        raise PermissionDenied(ERROR_BLOG_ALREADY_EXISTS)
 
 
 # ViewSet para Post

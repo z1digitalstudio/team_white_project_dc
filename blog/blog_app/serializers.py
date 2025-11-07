@@ -1,34 +1,11 @@
 from auth_app.permissions import admin_permissions
 from rest_framework import serializers
 
-from .models import Blog, Post, Tag
+from blog_app.constants import ERROR_USER_NOT_AUTHENTICATED
+from blog_app.helpers import create_user, validate_user_owns_posts
+from blog_app.models import Blog, Post, Tag
 
 from django.contrib.auth.models import User
-
-
-# --- Funciones auxiliares ---
-def validate_user_owns_posts(
-    user, posts
-):  # Valida que todos los posts pertenezcan al usuario (o superusuario)
-
-    for post in posts:
-        if post.blog.user != user and not user.is_superuser:
-            raise serializers.ValidationError(
-                f"El post '{post.title}' no pertenece al usuario autenticado."
-            )
-
-
-def create_user(validated_data):  # Crea un usuario y cifra la contraseña.
-
-    user = User.objects.create_user(
-        username=validated_data["username"],
-        email=validated_data.get("email"),
-        password=validated_data["password"],
-    )
-    # Dar acceso al admin
-    user.is_staff = True
-    user.save()
-    return user
 
 
 # --- Serializers ---
@@ -48,7 +25,7 @@ class TagSerializer(serializers.ModelSerializer):
 
         user = self.context["request"].user
         if not user.is_authenticated:
-            raise serializers.ValidationError("No estás autenticado.")
+            raise serializers.ValidationError(ERROR_USER_NOT_AUTHENTICATED)
 
         validate_user_owns_posts(user, posts)
         return posts
