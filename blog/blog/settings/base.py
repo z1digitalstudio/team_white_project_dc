@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     "drf_yasg",  # Para generar la documentación de la API
     # APP
     "blog_app",
+    "auth_app",
 ]
 
 MIDDLEWARE = [

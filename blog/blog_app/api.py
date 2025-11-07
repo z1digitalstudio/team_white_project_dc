@@ -1,9 +1,9 @@
+from auth_app.permissions import IsBlogOwnerOrAdmin, IsOwnerOrAdmin, is_superuser
 from rest_framework import generics, viewsets
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.permissions import AllowAny
 
 from .models import Blog, Post, Tag
-from .permissions import IsBlogOwnerOrAdmin, IsOwnerOrAdmin, is_superuser
 from .serializers import (
     BlogSerializer,
     PostSerializer,

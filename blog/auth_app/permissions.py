@@ -1,6 +1,6 @@
 from rest_framework import permissions
 
-from .models import Blog, Post, Tag
+from blog_app.models import Blog, Post, Tag
 
 from django.contrib.auth.models import Permission
 from django.contrib.contenttypes.models import ContentType

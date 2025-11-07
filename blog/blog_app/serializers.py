@@ -1,7 +1,7 @@
+from auth_app.permissions import admin_permissions
 from rest_framework import serializers
 
 from .models import Blog, Post, Tag
-from .permissions import admin_permissions
 
 from django.contrib.auth.models import User
 
