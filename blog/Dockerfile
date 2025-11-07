@@ -13,14 +13,14 @@ ENV DJANGO_SETTINGS_MODULE=blog.settings.prod
 WORKDIR /app
 
 # Copiar carpeta de requirements
-COPY blog/requirements/ /app/requirements/
+COPY requirements/ /app/requirements/
 
 # Instalar dependencias de producción
 RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir -r requirements/requirements-prod.txt
 
 # Copiar la app y script de arranque
-COPY blog/ /app/
+COPY . /app/
 
 # Dar permisos de ejecución al script de arranque
 RUN chmod +x /app/start.sh
