@@ -2,6 +2,11 @@ from auth_app.helpers import check_user_authenticated  # Para graphQL
 import graphene  # pyright: ignore[reportMissingImports]
 from graphene_django import DjangoObjectType  # pyright: ignore[reportMissingImports]
 
+from blog_app.constants import (
+    ERROR_BLOG_NOT_ASSOCIATED,
+    ERROR_BLOG_USER_HAS_BLOG,
+    ERROR_TAG_PERMISSION_DENIED,
+)
 from blog_app.models import Blog, Post, Tag
 from blog_app.serializers import BlogSerializer, PostSerializer, TagSerializer
 
@@ -64,7 +69,7 @@ class CreateBlog(graphene.Mutation):
 
         # cada usuario puede tener solo 1 blog
         if not user.is_superuser and Blog.objects.filter(user=user).exists():
-            return CreateBlog(blog=None, errors=["Ya tienes un blog creado."])
+            return CreateBlog(blog=None, errors=[ERROR_BLOG_USER_HAS_BLOG])
 
         data = {"title": title, "description": description, "user": user.id}
         serializer = BlogSerializer(data=data)
@@ -88,7 +93,7 @@ class CreatePost(graphene.Mutation):
         blog = Blog.objects.filter(user=user).first()
 
         if not blog:
-            return CreatePost(post=None, errors=["No tienes un blog asociado."])
+            return CreatePost(post=None, errors=[ERROR_BLOG_NOT_ASSOCIATED])
 
         data = {
             "title": title,
@@ -113,7 +118,7 @@ class CreateTag(graphene.Mutation):
     def mutate(self, info, name):  # noqa: PLR6301
         user = check_user_authenticated(info)
         if not user.is_staff and not user.is_superuser:
-            return CreateTag(tag=None, errors=["No tienes permiso para crear tags."])
+            return CreateTag(tag=None, errors=[ERROR_TAG_PERMISSION_DENIED])
 
         serializer = TagSerializer(data={"name": name})
         if serializer.is_valid():
