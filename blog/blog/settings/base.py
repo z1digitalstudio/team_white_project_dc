@@ -76,8 +76,8 @@ REST_FRAMEWORK = {
         "rest_framework.permissions.IsAuthenticatedOrReadOnly"  # Ver contenido sin estar logueado. Crear/editar si se está autenticado
     ],
     "DEFAULT_AUTHENTICATION_CLASSES": [
-        "rest_framework.authentication.SessionAuthentication",
-        "rest_framework.authentication.BasicAuthentication",
+        "rest_framework_simplejwt.authentication.JWTAuthentication",  # JWT para API
+        "rest_framework.authentication.SessionAuthentication",  # para dev/admin
     ],
 }
 
