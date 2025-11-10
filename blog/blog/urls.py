@@ -19,6 +19,10 @@ from drf_yasg import openapi
 from drf_yasg.views import get_schema_view
 from graphene_django.views import GraphQLView  # pyright: ignore[reportMissingImports]
 from rest_framework import permissions, routers
+from rest_framework_simplejwt.views import (  # pyright: ignore[reportMissingImports]
+    TokenObtainPairView,
+    TokenRefreshView,
+)
 
 from blog_app.api import BlogViewSet, PostViewSet, RegisterView, TagViewSet
 from blog_app.schema import schema
@@ -43,6 +47,9 @@ urlpatterns = [
     path("api-auth/", include("rest_framework.urls")),  # Login para DRF
     path("api/register/", RegisterView.as_view(), name="register"),  # registro
     path("", include("blog_app.urls")),  # Rutas normales del blog
+    # Endpoints JWT
+    path("api/token/", TokenObtainPairView.as_view(), name="token_obtain_pair"),
+    path("api/token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
     # GraphQL (NO usa router)
     path("graphql/", GraphQLView.as_view(graphiql=True, schema=schema)),
 ]
