@@ -1,8 +1,8 @@
-from auth_app.permissions import admin_permissions
+from auth_app.constants import ERROR_USER_NOT_AUTHENTICATED
+from auth_app.helpers import admin_permissions, create_user
 from rest_framework import serializers
 
-from blog_app.constants import ERROR_USER_NOT_AUTHENTICATED
-from blog_app.helpers import create_user, validate_user_owns_posts
+from blog_app.helpers import validate_user_owns_posts
 from blog_app.models import Blog, Post, Tag
 
 from django.contrib.auth.models import User
