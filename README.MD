@@ -152,7 +152,7 @@ Desde el admin se puede:
 
 ---
 
-## 📘 Documentación de la API
+## 📘 Pruebas de la API
 
 Cómo probar con Postman
 
@@ -172,6 +172,99 @@ POST /api/posts/
 }
 
 ---
+
+## 📘 Pruebas de la API
+
+Como probar con GraphQL
+1. Obtener el blog
+{
+  allBlogs {
+    id
+    title
+    description
+  }
+}
+
+
+2. Obtener todos los posts
+{
+  allPosts {
+    id
+    title
+    content
+    createdAt
+    updatedAt
+    blog {
+      id
+      title
+    }
+    tags {
+      id
+      name
+    }
+  }
+}
+
+3. Obtener todos los tags
+{
+  allTags {
+    id
+    name
+    posts {
+      id
+      title
+    }
+  }
+}
+
+
+4. Crear un post
+mutation {
+  createPost(
+    title: "Título del post",
+    content: "Contenido del post",
+  ) {
+    post {
+      id
+      title
+      content
+      blog {
+        id
+        title
+      }
+      tags {
+        id
+        name
+      }
+    }
+    errors
+  }
+}
+
+
+5. Crear un tag:
+mutation {
+  createTag(
+    name: "python"
+    postIds: [19, 30]  # IDs de los posts que se quiere asociar
+  ) {
+    tag {
+      id
+      name
+      posts {
+        id
+        title
+      }
+    }
+    errors
+  }
+}
+
+
+
+
+---
+
 
 ## 📘 Documentación de la API
 
@@ -199,12 +292,26 @@ Ambas interfaces permiten probar los endpoints directamente desde el navegador.
 │   │   ├── wsgi.py               # Entrada WSGI (para Gunicorn u otros)
 │   │   └── asgi.py               # Entrada ASGI (para Django Channels o async)
 │   │
-│   ├── blog_app/                 # Tu aplicación principal
+│   ├── auth_app/                 # Aplicación
+│   │   ├── __init__.py
+│   │   ├── apps.py
+│   │   ├── models.py
+│   │   ├── constants.py
+│   │   ├── helpers.py
+│   │   ├── admin.py
+│   │   ├── tests.py
+│   │   ├── views.py
+│   │   └── permissions.py
+|   |
+│   ├── blog_app/                 # Aplicación
 │   │   ├── __init__.py
 │   │   ├── apps.py
 │   │   ├── models.py
 │   │   ├── serializers.py
+│   │   ├── constants.py
+│   │   ├── helpers.py
 │   │   ├── api.py
+│   │   ├── schema.py
 │   │   ├── admin.py
 │   │   ├── urls.py
 │   │   ├── views.py
