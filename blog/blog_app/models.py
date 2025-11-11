@@ -9,7 +9,7 @@ class Blog(models.Model):
     description = models.TextField(blank=True)
 
     def __str__(self):
-        return self.title
+        return f"{self.title} (Blog de {self.user.username})"
 
 
 # 2.2 Post con campos básicos
@@ -22,7 +22,7 @@ class Post(models.Model):
     updated_at = models.DateTimeField(auto_now=True)  # fecha de actualización
 
     def __str__(self):
-        return self.title
+        return f"{self.title} ({self.blog.user.username})"
 
     class Meta:
         ordering = ["-created_at"]  # 2.4 Metadatos: orden descendente por fecha
@@ -30,7 +30,9 @@ class Post(models.Model):
 
 # 2.3 Tag y relación M:N con Post
 class Tag(models.Model):
-    name = models.CharField(max_length=50)
+    name = models.CharField(
+        max_length=50, db_index=True
+    )  # busca un valor concreto o rango de valores mucho más rápido que recorriendo toda la tabla
     posts = models.ManyToManyField("Post", related_name="tags", blank=True)
 
     def __str__(self):
