@@ -5,7 +5,7 @@ from tests.factories import BlogFactory, PostFactory, UserFactory
 
 
 OK_REQUEST_STATUS = 200
-BAD_REQUEST = 400
+BAD_REQUEST = 403
 
 
 # TESTS DE BLOGS
