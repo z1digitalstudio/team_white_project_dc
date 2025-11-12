@@ -31,7 +31,7 @@ class PostAdmin(ImportExportModelAdmin):
     list_display = ("title", "blog", "created_at", "updated_at")
 
     # Campos por los que se puede buscar
-    search_fields = ("title", "content")
+    search_fields = ("title", "content", "blog__title")
 
     # Usa TinyMCE para el campo de texto "content"
     formfield_overrides = {
@@ -101,8 +101,8 @@ class BlogAdmin(admin.ModelAdmin):
 # Admin tags
 @admin.register(Tag)
 class TagAdmin(admin.ModelAdmin):
-    list_display = ("name",)
-    search_fields = ("name",)
+    list_display = ("name", "blog")
+    search_fields = ("name", "blog__user__username")
 
     # Filtra los tags del usuario (o todos si es superusuario)
     def get_queryset(self, request):
@@ -111,6 +111,12 @@ class TagAdmin(admin.ModelAdmin):
             return queryset
         # Solo tags asociados a posts del usuario
         return queryset.filter(posts__blog__user=request.user).distinct()
+
+    # Filtra el campo blog del formulario según el usuario
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        if db_field.name == "blog" and not request.user.is_superuser:
+            kwargs["queryset"] = Blog.objects.filter(user=request.user)
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
     # Filtra posts visibles en el formulario (ManyToMany)
     def formfield_for_manytomany(self, db_field, request, **kwargs):
