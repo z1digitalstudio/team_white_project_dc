@@ -14,10 +14,11 @@ class TagSerializer(serializers.ModelSerializer):
     posts = serializers.PrimaryKeyRelatedField(
         many=True, queryset=Post.objects.all(), required=False
     )
+    blog = serializers.StringRelatedField(read_only=True)
 
     class Meta:
         model = Tag
-        fields = ["id", "name", "posts"]
+        fields = ["id", "name", "posts", "blog"]
 
     def validate_posts(
         self, posts

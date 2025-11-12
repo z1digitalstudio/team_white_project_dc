@@ -101,8 +101,8 @@ class TagViewSet(viewsets.ModelViewSet):
         name = validated_data.get("name")  # Obtiene el nombre del tag
 
         validate_user_owns_posts(user, posts)  # Valida propiedad de posts
-
-        tag = get_or_create_tag_by_name(name)  # Obtiene o crea tag
+        blog = get_user_blog(user)  # Obtiene el blog del usuario
+        tag = get_or_create_tag_by_name(blog, name)  # Obtiene o crea tag
 
         tag.posts.add(*posts)  # Asocia posts (evita duplicados automáticamente)
 

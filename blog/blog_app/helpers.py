@@ -30,10 +30,8 @@ def validate_user_owns_posts(user, posts):
             raise PermissionDenied(ERROR_POST_NOT_OWNED.format(title=post.title))
 
 
-def get_or_create_tag_by_name(name):
-    """Normaliza el nombre y obtiene el primer tag existente o crea uno nuevo."""
+def get_or_create_tag_by_name(blog, name):
+    """Normaliza el nombre y obtiene (o crea) el tag dentro del blog."""
     name = name.strip().lower()
-    tag = Tag.objects.filter(name=name).first()
-    if not tag:
-        tag = Tag.objects.create(name=name)
+    tag, _ = Tag.objects.get_or_create(blog=blog, name=name)
     return tag

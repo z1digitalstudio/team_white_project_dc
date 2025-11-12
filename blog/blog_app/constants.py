@@ -12,5 +12,5 @@ SUCCESS_POST_CREATED = "Post creado correctamente."
 SUCCESS_TAG_CREATED = "Tag creado correctamente."
 
 # --- Valores por defecto / templates ---
-DEFAULT_BLOG_TITLE = "Blog de {username}"
+DEFAULT_BLOG_TITLE = "Blog"
 DEFAULT_BLOG_DESCRIPTION = "Blog creado automáticamente."
