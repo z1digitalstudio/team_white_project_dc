@@ -55,6 +55,8 @@ class Query(graphene.ObjectType):
 
     def resolve_all_blogs(self, info):  # noqa: PLR6301
         user = check_user_authenticated(info)
+        print(info.context.META.get("HTTP_AUTHORIZATION"))
+        print(info.context.user)
         if user.is_superuser:
             return Blog.objects.all()
         return Blog.objects.filter(user=user)
