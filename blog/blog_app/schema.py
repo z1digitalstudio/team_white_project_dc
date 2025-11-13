@@ -1,6 +1,7 @@
 from auth_app.helpers import check_user_authenticated  # Para graphQL
 import graphene  # pyright: ignore[reportMissingImports]
 from graphene_django import DjangoObjectType  # pyright: ignore[reportMissingImports]
+import graphql_jwt  # pyright: ignore[reportMissingImports]
 from rest_framework_simplejwt.tokens import (  # pyright: ignore[reportMissingImports]
     RefreshToken,  # pyright: ignore[reportMissingImports]
 )
@@ -217,6 +218,11 @@ class Mutation(graphene.ObjectType):
     create_post = CreatePost.Field()
     create_tag = CreateTag.Field()
     register_user = RegisterUser.Field()
+
+    # Mutaciones JWT
+    token_auth = graphql_jwt.ObtainJSONWebToken.Field()  # obtener token
+    verify_token = graphql_jwt.Verify.Field()  # verificar token
+    refresh_token = graphql_jwt.Refresh.Field()  # refrescar token
 
 
 schema = graphene.Schema(query=Query, mutation=Mutation)

@@ -81,7 +81,12 @@ REST_FRAMEWORK = {
     ],
 }
 
-GRAPHENE = {"SCHEMA": "blog_app.schema.schema"}  # ruta al schema principal
+GRAPHENE = {
+    "SCHEMA": "blog_app.schema.schema",  # ruta al schema principal
+    "MIDDLEWARE": [
+        "graphql_jwt.middleware.JSONWebTokenMiddleware",  # Habilita autenticación JWT en GraphQL
+    ],
+}
 
 ROOT_URLCONF = "blog.urls"
 

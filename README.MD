@@ -176,6 +176,13 @@ POST /api/posts/
 ## 📘 Pruebas de la API
 
 Como probar con GraphQL
+
+0. Login:
+Acceder a https://teamwhiteprojectdc-production.up.railway.app/api/token/
+Ingresar usuario y contraseña y se generará un token
+Copiar campo 'access'
+
+
 1. Obtener el blog
 {
   allBlogs {
@@ -256,6 +263,20 @@ mutation {
         title
       }
     }
+    errors
+  }
+}
+
+6. Registrar un usuario
+mutation {
+  registerUser(username: "usuario", email: "usuario@mail.com", password: "123456") {
+    user {
+      id
+      username
+      email
+    }
+    token
+    refreshToken
     errors
   }
 }
