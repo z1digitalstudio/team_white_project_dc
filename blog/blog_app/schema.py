@@ -11,6 +11,7 @@ from blog_app.constants import (
     ERROR_BLOG_USER_HAS_BLOG,
     ERROR_TAG_PERMISSION_DENIED,
     ERROR_TAG_POSTS_NOT_FOUND,
+    ERROR_USER_HAS_NOT_ASOCIATED_BLOG,
 )
 from blog_app.helpers import get_user_blog, validate_user_owns_posts
 from blog_app.models import Blog, Post, Tag
@@ -55,8 +56,10 @@ class Query(graphene.ObjectType):
 
     def resolve_all_blogs(self, info):  # noqa: PLR6301
         user = check_user_authenticated(info)
-        print(info.context.META.get("HTTP_AUTHORIZATION"))
-        print(info.context.user)
+        print("info.context:", info.context)
+        print("META keys:", info.context.META.keys())
+        print("HTTP_AUTHORIZATION:", info.context.META.get("HTTP_AUTHORIZATION"))
+        print("User:", info.context.user)
         if user.is_superuser:
             return Blog.objects.all()
         return Blog.objects.filter(user=user)
@@ -168,14 +171,19 @@ class CreateTag(graphene.Mutation):
         # Validar que el usuario es propietario de los posts
         validate_user_owns_posts(user, posts_qs)
 
-        # Pasar solo los IDs al serializer, que es lo que espera
+        # Obtener blog del usuario
+        blog = Blog.objects.filter(user=user).first()
+        if not blog:
+            return CreateTag(tag=None, errors=[ERROR_USER_HAS_NOT_ASOCIATED_BLOG])
+
+        # Preparar datos para el serializer
         data = {"name": name, "posts": [p.id for p in posts_qs]}
         serializer = TagSerializer(data=data, context={"request": info.context})
+
         if serializer.is_valid():
-            tag = serializer.save()
+            tag = serializer.save(blog=blog)  # Pasa el blog al serializer
             return CreateTag(tag=tag, errors=[])
 
-        # Si hay errores del serializer, los devolvemos
         errors = [f"{f}: {', '.join(msgs)}" for f, msgs in serializer.errors.items()]
         return CreateTag(tag=None, errors=errors)
 
