@@ -1,6 +1,6 @@
-# 📰 Blog CMS – Headless CMS con Django
+# Blog CMS – Headless CMS con Django
 
-Proyecto que implementa un **CMS (Content Management System)** headless básico utilizando **Django** y **Django REST Framework**.
+Proyecto que implementa un **CMS (Content Management System)** headless básico utilizando **Django** y **GRAPHQL**.
 Permite a los usuarios registrarse, crear un blog personal, gestionar posts y etiquetas, y acceder a los datos mediante una API REST documentada.
 
 ---
@@ -10,14 +10,23 @@ Permite a los usuarios registrarse, crear un blog personal, gestionar posts y et
 | Tecnología                | Uso                           |
 | ------------------------- | ----------------------------- |
 | **Python 3.14+**          | Lenguaje principal            |
-| **Django 5.2,7**            | Framework backend             |
+| **Django 5.2,7**          | Framework backend             |
 | **Django REST Framework** | API REST                      |
+| **GraphQL**               | API REST principal            |
 | **django-tinymce**        | Editor HTML en el admin       |
 | **django-import-export**  | Exportación de datos          |
 | **drf-yasg**              | Documentación Swagger / Redoc |
 | **SQLite**                | Base de datos para desarrollo |
+| **POSTGRE**               | Base de datos para producción |
 
 ---
+
+
+## Requisitos Previos
+Asegúrate de tener instalado:
+
+- **Docker 20+**
+- **Docker Compose 2+**
 
 ## Instalación y Configuración
 
@@ -28,38 +37,33 @@ git clone https://github.com/danielachg28/proyecto1-blog-cms.git
 cd blog-cms
 ```
 
-### 2. Crear y activar entorno virtual
+## 2. Configuración del entorno
 
-```bash
-python -m venv myvenv
-source myvenv/bin/activate   # En macOS/Linux
-myvenv\Scripts\activate      # En Windows
-```
+Este proyecto utiliza variables de entorno definidas en un archivo `.env`.
+**Por seguridad, los archivos `.env` no se incluyen en el repositorio.**
 
-### 3. Instalar dependencias
+Para ejecutar el proyecto, crea un archivo `.env` en la raíz del proyecto con las variables necesarias:
 
-```bash
-pip install -r requirements.txt
-```
+DJANGO_DEBUG=True
+DJANGO_SECRET_KEY=dev-secret
+DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1,0.0.0.0
+DATABASE_URL=sqlite:///db.sqlite3
+DJANGO_SETTINGS_MODULE=blog.settings.dev
 
-### 4. Aplicar migraciones
+# Para levantar el proyecto:
+docker compose up --build
 
-```bash
-python manage.py makemigrations
-python manage.py migrate
-```
+# Para ejecutar en segundo plano:
+docker compose up -d
 
-### 5. Crear superusuario
+# Para detener y eliminar contenedores:
+docker compose down
 
-```bash
-python manage.py createsuperuser
-```
+# Acceder a un contenedor:
+docker exec <nombre del contenedor> bash
 
-### 6. Ejecutar el servidor
 
-```bash
-python manage.py runserver
-```
+### 3. Ejecutar el servidor
 
 Abrir en el navegador:
 [http://127.0.0.1:8000/](http://127.0.0.1:8000/)
@@ -73,7 +77,7 @@ Abrir en el navegador:
 - **Gestión de posts y etiquetas** desde panel admin y API
 - **TinyMCE** como editor de texto enriquecido
 - **Exportación de datos a CSV/JSON** desde el admin
-- **Autenticación por sesión en API REST**
+- **Autenticación por token en API REST GraphQL**
 - **Documentación Swagger y Redoc automática**
 
 ---
@@ -97,6 +101,7 @@ User (Django built-in)
 | ------------------ | ---------- | -------------------------- | ------------- |
 | `/api/register/`   | POST       | Registrar un nuevo usuario | ❌ No requiere |
 | `/api-auth/login/` | GET        | Iniciar sesión             | ✅ Sí          |
+| `/api/token/`      |
 | `/api/blogs/`      | GET / POST | Ver o crear blogs          | ✅ Sí          |
 | `/api/posts/`      | GET / POST | Ver o crear posts          | ✅ Sí          |
 | `/api/tags/`       | GET / POST | Ver o crear etiquetas      | ✅ Sí          |
@@ -142,15 +147,13 @@ Para realizar peticiones a la API (crear posts, blogs, tags), es necesario auten
 Acceso al panel administrativo:
 
 [http://127.0.0.1:8000/admin/](http://127.0.0.1:8000/admin/)
-Usuario: *superuser* creado en el paso 5
+
 
 Desde el admin se puede:
 
 * Crear/editar blogs, posts y etiquetas
 * Editar contenido con **TinyMCE**
 * Exportar datos con **django-import-export**
-
----
 
 ## Pruebas de la API (DRF)
 
@@ -160,8 +163,17 @@ Cómo probar con Postman
 POST http://127.0.0.1:8000/api/register/
 
 2. Autenticarse
-En cada petición → pestaña Authorization → Basic Auth
-Usar usuario y contraseña creados.
+En `/api/token/` usar método POST -> body:
+{
+    "username": "usuario",
+    "password": "contraseña"
+}
+
+Copiar el "access" token y luego en la pestaña de Headers añadir:
+Key: Authorization
+Value: Bearer <tu_token_access>
+Para todas las consultas
+
 
 3. Crear post
 POST /api/posts/
@@ -171,29 +183,47 @@ POST /api/posts/
   "content": "Contenido del post"
 }
 
----
+## API REST (GraphQL)
+**Endpoint único:** `/graphql/`
+**Método:** POST
+
+| Operación    | Tipo     | Descripción                          | Autenticación  |
+|--------------|----------|--------------------------------------|----------------|
+| registerUser | Mutation | Registrar un nuevo usuario           | ❌ No requiere |
+| tokenAuth    | Mutation | Login de usuario                     | ❌ No requiere |
+| createBlog   | Mutation | Crear un blog                        | ✅ Sí          |
+| createPost   | Mutation | Crear un post                        | ✅ Sí          |
+| createTag    | Mutation | Crear una etiqueta / tag             | ✅ Sí          |
+| allBlogs     | Query    | Obtener todos los blogs              | ✅ Sí          |
+| allPosts     | Query    | Obtener todos los posts              | ✅ Sí          |
+| allTags      | Query    | Obtener todas las etiquetas          | ✅ Sí          |
+
 
 ## Pruebas de la API (GRAPHQL)
 
-Como probar con Postman (GraphQL):
+# Como probar con Postman (GraphQL):
 - Seleccionar pestaña de GraphQL y se visualizarán las queries
+
 - en la casilla de url: Método: POST  https://teamwhiteprojectdc-production.up.railway.app/graphql/
+
 - Al hacer el login, copiar el token y la pestaña de headers añadir:
   Key: Authorization
   Value: Bearer <token>
+
 -Realizar las consultas
 
 
-Como probar con GraphQL interfaz:
+# Como probar con GraphQL interfaz:
 
 - Acceder a https://teamwhiteprojectdc-production.up.railway.app/graphql/
+
 -Al hacer el login, copiar el token y la sección de headers añadir:
 {
   "Authorization": "Bearer <token>"
 }
 
+# Consultas (Postman e intefaz):
 
-Consultas:
 1. Registrar un usuario
 mutation {
   registerUser(username: "usuario", email: "usuario@mail.com", password: "123456") {
@@ -207,7 +237,6 @@ mutation {
     errors
   }
 }
-
 
 2. Login:
 mutation {
@@ -224,7 +253,6 @@ mutation {
     description
   }
 }
-
 
 4. Obtener todos los posts
 {
@@ -281,7 +309,6 @@ mutation {
   }
 }
 
-
 7. Crear un tag:
 mutation {
   createTag(
@@ -301,23 +328,15 @@ mutation {
 }
 
 
-
-
-
-
----
-
-
-## 📘 Documentación de la API
+## Documentación de la API
 
 * **Swagger UI:** [http://127.0.0.1:8000/swagger/](http://127.0.0.1:8000/swagger/)
 * **Redoc UI:** [http://127.0.0.1:8000/redoc/](http://127.0.0.1:8000/redoc/)
 
 Ambas interfaces permiten probar los endpoints directamente desde el navegador.
 
----
 
-## 🧾 Estructura del Proyecto
+## Estructura del Proyecto
 
 ```
  proyecto1-blog-cms/
