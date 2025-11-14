@@ -5,7 +5,7 @@ Permite a los usuarios registrarse, crear un blog personal, gestionar posts y et
 
 ---
 
-## 🚀 Tecnologías Utilizadas
+## Tecnologías Utilizadas
 
 | Tecnología                | Uso                           |
 | ------------------------- | ----------------------------- |
@@ -19,16 +19,16 @@ Permite a los usuarios registrarse, crear un blog personal, gestionar posts y et
 
 ---
 
-## ⚙️ Instalación y Configuración
+## Instalación y Configuración
 
-### 1️⃣ Clonar el repositorio
+### 1. Clonar el repositorio
 
 ```bash
 git clone https://github.com/danielachg28/proyecto1-blog-cms.git
 cd blog-cms
 ```
 
-### 2️⃣ Crear y activar entorno virtual
+### 2. Crear y activar entorno virtual
 
 ```bash
 python -m venv myvenv
@@ -36,49 +36,49 @@ source myvenv/bin/activate   # En macOS/Linux
 myvenv\Scripts\activate      # En Windows
 ```
 
-### 3️⃣ Instalar dependencias
+### 3. Instalar dependencias
 
 ```bash
 pip install -r requirements.txt
 ```
 
-### 4️⃣ Aplicar migraciones
+### 4. Aplicar migraciones
 
 ```bash
 python manage.py makemigrations
 python manage.py migrate
 ```
 
-### 5️⃣ Crear superusuario
+### 5. Crear superusuario
 
 ```bash
 python manage.py createsuperuser
 ```
 
-### 6️⃣ Ejecutar el servidor
+### 6. Ejecutar el servidor
 
 ```bash
 python manage.py runserver
 ```
 
 Abrir en el navegador:
-👉 [http://127.0.0.1:8000/](http://127.0.0.1:8000/)
+[http://127.0.0.1:8000/](http://127.0.0.1:8000/)
 
 ---
 
-## 🧩 Funcionalidades Principales
+## Funcionalidades Principales
 
-✅ **Registro y login de usuarios**
-✅ **Blog personal por usuario** (1:1 con `User`)
-✅ **Gestión de posts y etiquetas** desde panel admin y API
-✅ **TinyMCE** como editor de texto enriquecido
-✅ **Exportación de datos a CSV/JSON** desde el admin
-✅ **Autenticación por sesión en API REST**
-✅ **Documentación Swagger y Redoc automática**
+- **Registro y login de usuarios**
+- **Blog personal por usuario** (1:1 con `User`)
+- **Gestión de posts y etiquetas** desde panel admin y API
+- **TinyMCE** como editor de texto enriquecido
+- **Exportación de datos a CSV/JSON** desde el admin
+- **Autenticación por sesión en API REST**
+- **Documentación Swagger y Redoc automática**
 
 ---
 
-## 🧠 Arquitectura de Modelos
+## Arquitectura de Modelos
 
 ```
 User (Django built-in)
@@ -89,7 +89,7 @@ User (Django built-in)
 
 ---
 
-## 🌐 API REST
+## API REST (Django Rest Framework)
 
 ### Endpoints principales
 
@@ -115,7 +115,7 @@ User (Django built-in)
 }
 ```
 
-✅ Respuesta esperada:
+Respuesta esperada:
 
 ```json
 {
@@ -127,7 +127,7 @@ User (Django built-in)
 
 ---
 
-## 🔐 Autenticación
+## Autenticación
 
 Para realizar peticiones a la API (crear posts, blogs, tags), es necesario autenticarse:
 
@@ -137,11 +137,11 @@ Para realizar peticiones a la API (crear posts, blogs, tags), es necesario auten
 
 ---
 
-## 🧑‍💻 Panel de Administración
+## Panel de Administración
 
 Acceso al panel administrativo:
 
-👉 [http://127.0.0.1:8000/admin/](http://127.0.0.1:8000/admin/)
+[http://127.0.0.1:8000/admin/](http://127.0.0.1:8000/admin/)
 Usuario: *superuser* creado en el paso 5
 
 Desde el admin se puede:
@@ -152,7 +152,7 @@ Desde el admin se puede:
 
 ---
 
-## 📘 Pruebas de la API
+## Pruebas de la API (DRF)
 
 Cómo probar con Postman
 
@@ -173,17 +173,50 @@ POST /api/posts/
 
 ---
 
-## 📘 Pruebas de la API
+## Pruebas de la API (GRAPHQL)
 
-Como probar con GraphQL
+Como probar con Postman (GraphQL):
+- Seleccionar pestaña de GraphQL y se visualizarán las queries
+- en la casilla de url: Método: POST  https://teamwhiteprojectdc-production.up.railway.app/graphql/
+- Al hacer el login, copiar el token y la pestaña de headers añadir:
+  Key: Authorization
+  Value: Bearer <token>
+-Realizar las consultas
 
-0. Login:
-Acceder a https://teamwhiteprojectdc-production.up.railway.app/api/token/
-Ingresar usuario y contraseña y se generará un token
-Copiar campo 'access'
+
+Como probar con GraphQL interfaz:
+
+- Acceder a https://teamwhiteprojectdc-production.up.railway.app/graphql/
+-Al hacer el login, copiar el token y la sección de headers añadir:
+{
+  "Authorization": "Bearer <token>"
+}
 
 
-1. Obtener el blog
+Consultas:
+1. Registrar un usuario
+mutation {
+  registerUser(username: "usuario", email: "usuario@mail.com", password: "123456") {
+    user {
+      id
+      username
+      email
+    }
+    token
+    refreshToken
+    errors
+  }
+}
+
+
+2. Login:
+mutation {
+  tokenAuth(username: "tu_usuario", password: "tu_password") {
+    token
+  }
+}
+
+3. Obtener el blog
 {
   allBlogs {
     id
@@ -193,7 +226,7 @@ Copiar campo 'access'
 }
 
 
-2. Obtener todos los posts
+4. Obtener todos los posts
 {
   allPosts {
     id
@@ -212,7 +245,7 @@ Copiar campo 'access'
   }
 }
 
-3. Obtener todos los tags
+5. Obtener todos los tags
 {
   allTags {
     id
@@ -225,7 +258,7 @@ Copiar campo 'access'
 }
 
 
-4. Crear un post
+6. Crear un post
 mutation {
   createPost(
     title: "Título del post",
@@ -249,7 +282,7 @@ mutation {
 }
 
 
-5. Crear un tag:
+7. Crear un tag:
 mutation {
   createTag(
     name: "python"
@@ -267,19 +300,7 @@ mutation {
   }
 }
 
-6. Registrar un usuario
-mutation {
-  registerUser(username: "usuario", email: "usuario@mail.com", password: "123456") {
-    user {
-      id
-      username
-      email
-    }
-    token
-    refreshToken
-    errors
-  }
-}
+
 
 
 
@@ -321,7 +342,7 @@ Ambas interfaces permiten probar los endpoints directamente desde el navegador.
 │   │   ├── helpers.py
 │   │   ├── admin.py
 │   │   ├── tests.py
-│   │   ├── views.py
+│   │   ├── views_graphql.py
 │   │   └── permissions.py
 |   |
 │   ├── blog_app/                 # Aplicación
