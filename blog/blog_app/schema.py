@@ -56,10 +56,6 @@ class Query(graphene.ObjectType):
 
     def resolve_all_blogs(self, info):  # noqa: PLR6301
         user = check_user_authenticated(info)
-        print("info.context:", info.context)
-        print("META keys:", info.context.META.keys())
-        print("HTTP_AUTHORIZATION:", info.context.META.get("HTTP_AUTHORIZATION"))
-        print("User:", info.context.user)
         if user.is_superuser:
             return Blog.objects.all()
         return Blog.objects.filter(user=user)
@@ -194,6 +190,7 @@ class RegisterUser(graphene.Mutation):
         email = graphene.String(required=False)
         password = graphene.String(required=True)
 
+    # --- Outputs ---
     user = graphene.Field(UserType)
     token = graphene.String()  # JWT
     refresh_token = graphene.String()  # JWT refresh
