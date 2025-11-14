@@ -31,7 +31,9 @@ def test_post_is_linked_to_blog():  # Crea un post y verifica que esté asociado
 def test_tag_is_created_with_post():  # Verifica que un Tag se cree correctamente y que se asocie a un Post
 
     post = PostFactory()  # Crea un post de prueba
-    tag = TagFactory(posts=[post])  # Crea un tag asociado a ese post
+    tag = TagFactory(
+        posts=[post], blog=post.blog
+    )  # Crea un tag asociado a ese post y a su blog
     assert tag.posts.exists()  # Debe tener al menos un post asociado
     linked_post = tag.posts.first()  # Obtiene el primer post asociado
     assert tag in linked_post.tags.all()  # La relación debe funcionar en ambos sentidos
