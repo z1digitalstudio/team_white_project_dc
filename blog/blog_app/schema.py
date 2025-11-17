@@ -9,9 +9,9 @@ from rest_framework_simplejwt.tokens import (  # pyright: ignore[reportMissingIm
 from blog_app.constants import (
     DEFAULT_BLOG_DESCRIPTION,
     ERROR_BLOG_USER_HAS_BLOG,
+    ERROR_POST_IS_REQUERIED,
     ERROR_TAG_PERMISSION_DENIED,
     ERROR_TAG_POSTS_NOT_FOUND,
-    ERROR_USER_HAS_NOT_ASOCIATED_BLOG,
 )
 from blog_app.helpers import get_user_blog, validate_user_owns_posts
 from blog_app.models import Blog, Post, Tag
@@ -121,7 +121,7 @@ class CreatePost(graphene.Mutation):
         # Obtener o crear blog del usuario
         blog = Blog.objects.filter(user=user).first()
         if not blog:
-            blog = get_user_blog(user)  # usa tu helper DRF
+            blog = get_user_blog(user)  # usa el helper DRF
 
         # Datos del post
         data = {"title": title, "content": content}
@@ -146,21 +146,26 @@ class CreateTag(graphene.Mutation):
     class Arguments:
         name = graphene.String(required=True)
         post_ids = graphene.List(
-            graphene.Int, required=True
+            graphene.Int, required=False
         )  # IDs de los posts a asociar
 
     tag = graphene.Field(TagType)
     errors = graphene.List(graphene.String)
 
-    def mutate(self, info, name, post_ids):  # noqa: PLR6301
+    def mutate(self, info, name, post_ids=None):  # noqa: PLR6301
         user = check_user_authenticated(info)  # usuario autenticado
+
+        if not post_ids:  # Si no se pasan posts, se devuelve un error
+            return CreateTag(tag=None, errors=[ERROR_POST_IS_REQUERIED])
 
         # Solo staff o superusuario puede crear tags
         if not user.is_staff and not user.is_superuser:
             return CreateTag(tag=None, errors=[ERROR_TAG_PERMISSION_DENIED])
 
         # Obtener los posts a asociar
-        posts_qs = Post.objects.filter(id__in=post_ids)
+        posts_qs = Post.objects.filter(
+            id__in=post_ids, blog__user=user
+        )  # Solo los posts del usuario autenticado
         if not posts_qs.exists():
             return CreateTag(tag=None, errors=[ERROR_TAG_POSTS_NOT_FOUND])
 
@@ -169,8 +174,6 @@ class CreateTag(graphene.Mutation):
 
         # Obtener blog del usuario
         blog = Blog.objects.filter(user=user).first()
-        if not blog:
-            return CreateTag(tag=None, errors=[ERROR_USER_HAS_NOT_ASOCIATED_BLOG])
 
         # Preparar datos para el serializer
         data = {"name": name, "posts": [p.id for p in posts_qs]}
@@ -227,9 +230,11 @@ class Mutation(graphene.ObjectType):
     register_user = RegisterUser.Field()
 
     # Mutaciones JWT
-    token_auth = graphql_jwt.ObtainJSONWebToken.Field()  # obtener token
-    verify_token = graphql_jwt.Verify.Field()  # verificar token
-    refresh_token = graphql_jwt.Refresh.Field()  # refrescar token
+    login_token_auth = graphql_jwt.ObtainJSONWebToken.Field()  # obtener token - login
+    refresh_token = (
+        graphql_jwt.Refresh.Field()
+    )  # refrescar token para que el usuario siga logueado
+    # verify_token = graphql_jwt.Verify.Field()  # verificar token - para debugging
 
 
 schema = graphene.Schema(query=Query, mutation=Mutation)
