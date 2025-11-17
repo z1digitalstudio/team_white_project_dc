@@ -75,7 +75,12 @@ class PostAdmin(ImportExportModelAdmin):
 # Admin blogs
 @admin.register(Blog)
 class BlogAdmin(admin.ModelAdmin):
-    list_display = ("title", "user")  # Mostrar título y dueño del blog
+    list_display = (
+        "title",
+        "user",
+        "created_at",
+        "updated_at",
+    )  # Mostrar título y dueño del blog
 
     # Filtra los blogs del usuario (o todos si es superusuario)
     def get_queryset(self, request):
@@ -101,7 +106,7 @@ class BlogAdmin(admin.ModelAdmin):
 # Admin tags
 @admin.register(Tag)
 class TagAdmin(admin.ModelAdmin):
-    list_display = ("name", "blog")
+    list_display = ("name", "blog", "created_at", "updated_at")
     search_fields = ("name", "blog__user__username")
 
     # Filtra los tags del usuario (o todos si es superusuario)
