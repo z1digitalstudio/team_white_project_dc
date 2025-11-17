@@ -7,6 +7,8 @@ class Blog(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="blog")
     title = models.CharField(max_length=100)
     description = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)  # fecha de creación
+    updated_at = models.DateTimeField(auto_now=True)  # fecha de actualización
 
     def __str__(self):
         return f"{self.title} (Blog de {self.user.username})"
@@ -30,6 +32,8 @@ class Post(models.Model):
 
 # 2.3 Tag y relación M:N con Post
 class Tag(models.Model):
+    created_at = models.DateTimeField(auto_now_add=True)  # fecha de creación
+    updated_at = models.DateTimeField(auto_now=True)  # fecha de actualización
     blog = models.ForeignKey(
         "Blog",
         on_delete=models.CASCADE,
