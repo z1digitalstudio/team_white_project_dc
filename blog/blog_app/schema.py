@@ -110,7 +110,7 @@ class CreatePost(graphene.Mutation):
     class Arguments:
         title = graphene.String(required=True)
         content = graphene.String(required=True)
-        tag_ids = graphene.List(graphene.Int)
+        tag_ids = graphene.List(graphene.Int, required=False)
 
     post = graphene.Field(PostType)
     errors = graphene.List(graphene.String)
