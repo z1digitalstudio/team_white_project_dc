@@ -240,7 +240,7 @@ mutation {
 
 2. Login:
 mutation {
-  tokenAuth(username: "tu_usuario", password: "tu_password") {
+  loginTokenAuth(username: "tu_usuario", password: "tu_password") {
     token
   }
 }
@@ -286,7 +286,20 @@ mutation {
 }
 
 
-6. Crear un post
+6. Crear un blog
+mutation CreateBlog {
+    createBlog(title: "Blog del usuario", description: "Descripción del blog") {
+        errors
+        blog {
+            id
+            title
+            description
+        }
+    }
+}
+
+
+7. Crear un post
 mutation {
   createPost(
     title: "Título del post",
@@ -309,7 +322,7 @@ mutation {
   }
 }
 
-7. Crear un tag:
+8. Crear un tag:
 mutation {
   createTag(
     name: "python"
