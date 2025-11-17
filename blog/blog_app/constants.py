@@ -6,7 +6,7 @@ ERROR_POST_NOT_OWNED = "No puedes asignar tags a posts que no son tuyos ({title}
 ERROR_TAG_PERMISSION_DENIED = "No tienes permiso para crear tags."
 ERROR_TAG_POSTS_NOT_FOUND = "No se encontraron posts con esos IDs."
 ERROR_NOT_OBTAIN_USER_BYTOKEN = "Error al obtener el  usuario por token."
-ERROR_USER_HAS_NOT_ASOCIATED_BLOG = "El usuario no tiene un blog asociado."
+ERROR_POST_IS_REQUERIED = "Debes indicar al menos un post para asociar el tag."
 
 # --- Mensajes de éxito ---
 SUCCESS_BLOG_CREATED = "Blog creado correctamente."
