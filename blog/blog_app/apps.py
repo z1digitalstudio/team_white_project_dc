@@ -1,14 +1,16 @@
-import os
+# import os
 
 from django.apps import AppConfig
-from django.contrib.auth import get_user_model
-from django.db import OperationalError, ProgrammingError
+
+
+# from django.contrib.auth import get_user_model
+# from django.db import OperationalError, ProgrammingError
 
 
 class BlogAppConfig(AppConfig):
     default_auto_field = "django.db.models.BigAutoField"
     name = "blog_app"
-
+    """
     def ready(self):  # noqa: PLR6301
         try:
             user_model = get_user_model()
@@ -21,3 +23,4 @@ class BlogAppConfig(AppConfig):
                 print(f"Superuser '{username}' creado automáticamente")
         except (OperationalError, ProgrammingError):
             print("Error al crear el superuser")
+    """
