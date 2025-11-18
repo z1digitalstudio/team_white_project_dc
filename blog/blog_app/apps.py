@@ -1,14 +1,18 @@
-import os
+# import os
 
 from django.apps import AppConfig
-from django.contrib.auth import get_user_model
-from django.db import OperationalError, ProgrammingError, connections
+
+
+# from django.contrib.auth import get_user_model
+# from django.db import OperationalError, ProgrammingError, connections
 
 
 class BlogAppConfig(AppConfig):
     default_auto_field = "django.db.models.BigAutoField"
     name = "blog_app"
 
+
+"""
     def ready(self):  # noqa: PLR6301
         try:
             connections["default"].ensure_connection()
@@ -25,3 +29,4 @@ class BlogAppConfig(AppConfig):
         if not user_model.objects.filter(username=username).exists():
             user_model.objects.create_superuser(username, email, password)
             print(f"Superuser '{username}' creado automáticamente")
+"""
