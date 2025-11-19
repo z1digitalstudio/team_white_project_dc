@@ -1,13 +1,13 @@
 from auth_app.permissions import IsBlogOwnerOrAdmin, IsOwnerOrAdmin, is_superuser
 from rest_framework import generics, viewsets
 from rest_framework.exceptions import PermissionDenied
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 
 from blog_app.constants import ERROR_BLOG_ALREADY_EXISTS
 from blog_app.helpers import (
-    get_or_create_tag_by_name,
+    get_or_create_tag,
     get_user_blog,
-    validate_user_owns_posts,
+    validate_posts_for_user,
 )
 
 from .models import Blog, Post, Tag
@@ -24,12 +24,6 @@ from django.contrib.auth.models import User
 # --- ViewSets ---
 # ViewSet para Blog
 class BlogViewSet(viewsets.ModelViewSet):
-    """
-    ViewSet para Blogs:
-    - GET: el blog del usuario (o todos si es superusuario)
-    - POST: bloqueado, los blogs se crean automáticamente al crear un post
-    """
-
     serializer_class = BlogSerializer
     permission_classes = [IsOwnerOrAdmin]
 
@@ -46,14 +40,6 @@ class BlogViewSet(viewsets.ModelViewSet):
 
 # ViewSet para Post
 class PostViewSet(viewsets.ModelViewSet):
-    """
-    ViewSet para Posts:
-    - GET: posts del usuario o todos si es superusuario
-    - POST: crea un post y crea automáticamente el blog si no existía
-    - PUT: permite editar posts del usuario
-    - DELETE: permite eliminar posts del usuario
-    """
-
     serializer_class = PostSerializer
     permission_classes = [IsBlogOwnerOrAdmin]
 
@@ -72,14 +58,8 @@ class PostViewSet(viewsets.ModelViewSet):
 
 
 # ViewSet para Tag
+"""
 class TagViewSet(viewsets.ModelViewSet):
-    """
-    ViewSet para Posts:
-    - GET: tags del usuario o todos si es superusuario
-    - POST: crea un tag y asocia posts al tag
-    - PUT: permite editar tags del usuario
-    - DELETE: permite eliminar tags del usuario
-    """
 
     serializer_class = TagSerializer
     permission_classes = [IsBlogOwnerOrAdmin]
@@ -100,8 +80,13 @@ class TagViewSet(viewsets.ModelViewSet):
         posts = validated_data.get("posts", [])  # Obtiene los posts del tag
         name = validated_data.get("name")  # Obtiene el nombre del tag
 
+        try:
+            blog = user.blog
+        except Blog.DoesNotExist:
+            raise PermissionDenied("No puedes crear tags si no tienes un blog.")  # noqa: B904
+
+        # blog = get_user_blog(user)  # Obtiene el blog del usuario
         validate_user_owns_posts(user, posts)  # Valida propiedad de posts
-        blog = get_user_blog(user)  # Obtiene el blog del usuario
         tag = get_or_create_tag_by_name(blog, name)  # Obtiene o crea tag
 
         tag.posts.add(*posts)  # Asocia posts (evita duplicados automáticamente)
@@ -114,6 +99,38 @@ class TagViewSet(viewsets.ModelViewSet):
         context = super().get_serializer_context()
         context["request"] = self.request
         return context
+"""
+
+
+class TagViewSet(viewsets.ModelViewSet):
+    serializer_class = TagSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        user = self.request.user
+        if user.is_superuser:
+            return Tag.objects.all()
+        return Tag.objects.filter(posts__blog__user=user).distinct()
+
+    def perform_create(self, serializer):
+        user = self.request.user
+        data = serializer.validated_data
+        posts = data.get("posts", [])
+        name = data.get("name")
+
+        # Obtener y validar blog del usuario
+        blog = get_user_blog(user)
+
+        # Validar que los posts pertenezcan al usuario
+        validate_posts_for_user(user, posts)
+
+        # Crear o obtener tag
+        tag = get_or_create_tag(blog, name)
+
+        # Asociar posts
+        tag.posts.add(*posts)
+
+        serializer.instance = tag
 
 
 class RegisterView(generics.CreateAPIView):

@@ -1,8 +1,7 @@
-from auth_app.constants import ERROR_USER_NOT_AUTHENTICATED
 from auth_app.helpers import admin_permissions, create_user
 from rest_framework import serializers
 
-from blog_app.helpers import validate_user_owns_posts
+from blog_app.helpers import get_user_blog
 from blog_app.models import Blog, Post, Tag
 
 from django.contrib.auth.models import User
@@ -20,16 +19,10 @@ class TagSerializer(serializers.ModelSerializer):
         model = Tag
         fields = ["id", "name", "posts", "blog"]
 
-    def validate_posts(
-        self, posts
-    ):  # Validar que los posts pertenecen al usuario autenticado.
-
+    def validate(self, attrs):
         user = self.context["request"].user
-        if not user.is_authenticated:
-            raise serializers.ValidationError(ERROR_USER_NOT_AUTHENTICATED)
-
-        validate_user_owns_posts(user, posts)
-        return posts
+        get_user_blog(user)  # solo valida que tenga blog
+        return attrs
 
 
 # Serializador para Post
