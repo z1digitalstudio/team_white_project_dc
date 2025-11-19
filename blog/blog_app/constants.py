@@ -8,6 +8,7 @@ ERROR_TAG_POSTS_NOT_FOUND = "No se encontraron posts con esos IDs."
 ERROR_NOT_OBTAIN_USER_BYTOKEN = "Error al obtener el  usuario por token."
 ERROR_POST_IS_REQUERIED = "Debes indicar al menos un post para asociar el tag."
 ERROR_NEED_CREATE_BLOG = "Debes crear un blog antes de continuar"
+
 # --- Mensajes de éxito ---
 SUCCESS_BLOG_CREATED = "Blog creado correctamente."
 SUCCESS_POST_CREATED = "Post creado correctamente."
