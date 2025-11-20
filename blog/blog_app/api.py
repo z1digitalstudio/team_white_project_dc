@@ -3,7 +3,7 @@ from rest_framework import generics, viewsets
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.permissions import AllowAny, IsAuthenticated
 
-from blog_app.constants import ERROR_BLOG_ALREADY_EXISTS
+from blog_app.constants import ERROR_BLOG_USER_HAS_BLOG
 from blog_app.helpers import (
     get_or_create_tag,
     get_user_blog,
@@ -33,9 +33,13 @@ class BlogViewSet(viewsets.ModelViewSet):
             return Blog.objects.all()
         return Blog.objects.filter(user=user)
 
-    def create(self, request, *args, **kwargs):  # noqa: PLR6301
-        # Bloquea la creación manual de blogs.
-        raise PermissionDenied(ERROR_BLOG_ALREADY_EXISTS)
+    def perform_create(self, serializer):
+        user = self.request.user
+
+        if Blog.objects.filter(user=user).exists():
+            raise PermissionDenied(ERROR_BLOG_USER_HAS_BLOG)
+
+        serializer.save(user=user)
 
 
 # ViewSet para Post
@@ -50,9 +54,7 @@ class PostViewSet(viewsets.ModelViewSet):
             return qs
         return qs.filter(blog__user=user)
 
-    def perform_create(
-        self, serializer
-    ):  # Asocia el post al blog del usuario, creando el blog si no existía
+    def perform_create(self, serializer):
         blog = get_user_blog(self.request.user)
         serializer.save(blog=blog)
 
