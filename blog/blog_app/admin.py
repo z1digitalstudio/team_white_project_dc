@@ -76,8 +76,9 @@ class PostAdmin(ImportExportModelAdmin):
 @admin.register(Blog)
 class BlogAdmin(admin.ModelAdmin):
     list_display = (
-        "title",
         "user",
+        "title",
+        "description",
         "created_at",
         "updated_at",
     )  # Mostrar título y dueño del blog
