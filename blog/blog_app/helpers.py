@@ -1,37 +1,32 @@
-from auth_app.helpers import is_superuser
 from rest_framework.exceptions import PermissionDenied
 
 from blog_app.models import Blog, Tag
 
 from .constants import (
-    DEFAULT_BLOG_DESCRIPTION,
-    DEFAULT_BLOG_TITLE,
-    ERROR_POST_NOT_OWNED,
+    ERROR_NEED_CREATE_BLOG,
+    ERROR_TAG_POSTS_NOT_FOUND,
 )
 
 
 # --- Funciones auxiliares del blog ---
 def get_user_blog(user):
-    """Obtiene o crea el blog del usuario."""
-    blog, _ = Blog.objects.get_or_create(
-        user=user,
-        defaults={
-            "title": DEFAULT_BLOG_TITLE.format(username=user.username),
-            "description": DEFAULT_BLOG_DESCRIPTION,
-        },
-    )
-    return blog
+    try:
+        return user.blog
+    except Blog.DoesNotExist:
+        raise PermissionDenied(ERROR_NEED_CREATE_BLOG)  # noqa: B904
 
 
-def validate_user_owns_posts(user, posts):
-    """Verifica que el usuario sea dueño de todos los posts indicados."""
-    for post in posts:
-        if post.blog.user != user and not is_superuser(user):
-            raise PermissionDenied(ERROR_POST_NOT_OWNED.format(title=post.title))
+def validate_posts_for_user(user, posts):
+    if not posts:
+        return
+    if not user.is_superuser:
+        for post in posts:
+            if post.blog.user != user:
+                raise PermissionDenied(ERROR_TAG_POSTS_NOT_FOUND)
 
 
-def get_or_create_tag_by_name(blog, name):
-    """Normaliza el nombre y obtiene (o crea) el tag dentro del blog."""
+def get_or_create_tag(blog, name):
+
     name = name.strip().lower()
     tag, _ = Tag.objects.get_or_create(blog=blog, name=name)
     return tag

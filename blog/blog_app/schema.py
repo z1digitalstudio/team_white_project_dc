@@ -2,6 +2,7 @@ from auth_app.helpers import check_user_authenticated  # Para graphQL
 import graphene  # pyright: ignore[reportMissingImports]
 from graphene_django import DjangoObjectType  # pyright: ignore[reportMissingImports]
 import graphql_jwt  # pyright: ignore[reportMissingImports]
+from rest_framework.exceptions import PermissionDenied
 from rest_framework_simplejwt.tokens import (  # pyright: ignore[reportMissingImports]
     RefreshToken,  # pyright: ignore[reportMissingImports]
 )
@@ -9,17 +10,13 @@ from rest_framework_simplejwt.tokens import (  # pyright: ignore[reportMissingIm
 from blog_app.constants import (
     DEFAULT_BLOG_DESCRIPTION,
     ERROR_BLOG_USER_HAS_BLOG,
-    ERROR_POST_IS_REQUERIED,
-    ERROR_TAG_PERMISSION_DENIED,
-    ERROR_TAG_POSTS_NOT_FOUND,
 )
-from blog_app.helpers import get_user_blog, validate_user_owns_posts
+from blog_app.helpers import get_or_create_tag, get_user_blog, validate_posts_for_user
 from blog_app.models import Blog, Post, Tag
 from blog_app.serializers import (
     BlogSerializer,
     PostSerializer,
     RegisterSerializer,
-    TagSerializer,
 )
 
 
@@ -83,20 +80,19 @@ class CreateBlog(graphene.Mutation):
     errors = graphene.List(graphene.String)
 
     def mutate(self, info, title, description=None):  # noqa: PLR6301
-        user = check_user_authenticated(info)  # extrae el usuario del token
+        user = check_user_authenticated(info)
 
-        # Verificar si ya tiene un blog
-        if not user.is_superuser and Blog.objects.filter(user=user).exists():
-            return CreateBlog(blog=None, errors=[ERROR_BLOG_USER_HAS_BLOG])
+        # Verificar si el usuario ya tiene blog (no superuser)
+        if not user.is_superuser:
+            if Blog.objects.filter(user=user).exists():
+                return CreateBlog(blog=None, errors=[ERROR_BLOG_USER_HAS_BLOG])
 
-        # Preparar datos
         data = {
             "title": title,
             "description": description or DEFAULT_BLOG_DESCRIPTION,
-            "user": user.id,  # aunque sea read_only, algunos serializers lo usan
+            "user": user.id,  # necesario para DRF serializer
         }
 
-        # Reutilizar serializer DRF
         serializer = BlogSerializer(data=data, context={"request": info.context})
         if serializer.is_valid():
             blog = serializer.save(user=user)
@@ -118,23 +114,25 @@ class CreatePost(graphene.Mutation):
     def mutate(self, info, title, content, tag_ids=None):  # noqa: PLR6301
         user = check_user_authenticated(info)
 
-        # Obtener o crear blog del usuario
-        blog = Blog.objects.filter(user=user).first()
-        if not blog:
-            blog = get_user_blog(user)  # usa el helper DRF
+        # Obtener blog y validar
+        try:
+            blog = get_user_blog(user)
+        except PermissionDenied as e:
+            return CreatePost(post=None, errors=[str(e)])
 
-        # Datos del post
-        data = {"title": title, "content": content}
+        # Serializador DRF
+        serializer = PostSerializer(
+            data={"title": title, "content": content}, context={"request": info.context}
+        )
 
-        # Reutilizar serializer DRF
-        serializer = PostSerializer(data=data, context={"request": info.context})
         if serializer.is_valid():
-            post = serializer.save(blog=blog)  # pasar la instancia de blog
+            post = serializer.save(blog=blog)
 
-            # Asociar tags si se pasan IDs
+            # Asociar tags si se pasan
             if tag_ids:
-                tags = Tag.objects.filter(id__in=tag_ids)
-                post.tags.set(tags)
+                posts_tags_qs = Post.objects.filter(id__in=tag_ids)
+                validate_posts_for_user(user, posts_tags_qs)
+                post.tags.set(posts_tags_qs)
 
             return CreatePost(post=post, errors=[])
 
@@ -145,46 +143,29 @@ class CreatePost(graphene.Mutation):
 class CreateTag(graphene.Mutation):
     class Arguments:
         name = graphene.String(required=True)
-        post_ids = graphene.List(
-            graphene.Int, required=False
-        )  # IDs de los posts a asociar
+        post_ids = graphene.List(graphene.Int, required=True)
 
     tag = graphene.Field(TagType)
     errors = graphene.List(graphene.String)
 
-    def mutate(self, info, name, post_ids=None):  # noqa: PLR6301
-        user = check_user_authenticated(info)  # usuario autenticado
+    def mutate(self, info, name, post_ids):  # noqa: PLR6301
+        user = check_user_authenticated(info)
 
-        if not post_ids:  # Si no se pasan posts, se devuelve un error
-            return CreateTag(tag=None, errors=[ERROR_POST_IS_REQUERIED])
+        # Validar blog del usuario
+        try:
+            blog = get_user_blog(user)
+        except PermissionDenied as e:
+            return CreateTag(tag=None, errors=[str(e)])
 
-        # Solo staff o superusuario puede crear tags
-        if not user.is_staff and not user.is_superuser:
-            return CreateTag(tag=None, errors=[ERROR_TAG_PERMISSION_DENIED])
+        # Obtener posts y validar propiedad
+        posts_qs = Post.objects.filter(id__in=post_ids)
+        validate_posts_for_user(user, posts_qs)
 
-        # Obtener los posts a asociar
-        posts_qs = Post.objects.filter(
-            id__in=post_ids, blog__user=user
-        )  # Solo los posts del usuario autenticado
-        if not posts_qs.exists():
-            return CreateTag(tag=None, errors=[ERROR_TAG_POSTS_NOT_FOUND])
+        # Crear tag usando helper
+        tag = get_or_create_tag(blog, name)
+        tag.posts.set(posts_qs)
 
-        # Validar que el usuario es propietario de los posts
-        validate_user_owns_posts(user, posts_qs)
-
-        # Obtener blog del usuario
-        blog = Blog.objects.filter(user=user).first()
-
-        # Preparar datos para el serializer
-        data = {"name": name, "posts": [p.id for p in posts_qs]}
-        serializer = TagSerializer(data=data, context={"request": info.context})
-
-        if serializer.is_valid():
-            tag = serializer.save(blog=blog)  # Pasa el blog al serializer
-            return CreateTag(tag=tag, errors=[])
-
-        errors = [f"{f}: {', '.join(msgs)}" for f, msgs in serializer.errors.items()]
-        return CreateTag(tag=None, errors=errors)
+        return CreateTag(tag=tag, errors=[])
 
 
 class RegisterUser(graphene.Mutation):
