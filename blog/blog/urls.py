@@ -24,8 +24,8 @@ from rest_framework_simplejwt.views import (  # pyright: ignore[reportMissingImp
     TokenRefreshView,
 )
 
+from blog.schema import schema
 from blog_app.api import BlogViewSet, PostViewSet, RegisterView, TagViewSet
-from blog_app.schema import schema
 
 from django.contrib import admin
 from django.urls import include, path

@@ -39,7 +39,6 @@ def is_owner_of_any_post(user, obj):
 
 # --- Helpers de GraphQL ---
 def check_user_authenticated(info):
-    """Verifica que el usuario esté autenticado en GraphQL."""
     user = info.context.user
     if not user or not user.is_authenticated:
         raise PermissionDenied(ERROR_GRAPHQL_NOT_AUTHENTICATED)
@@ -70,7 +69,7 @@ def admin_permissions(user):
 
     # Define los modelos y los codenames de permisos a asignar
     permisos_por_modelo = {
-        Blog: ["view_blog", "change_blog"],
+        Blog: ["view_blog", "change_blog", "add_blog", "delete_blog"],
         Post: ["view_post", "add_post", "change_post", "delete_post"],
         Tag: ["view_tag", "add_tag", "change_tag", "delete_tag"],
     }

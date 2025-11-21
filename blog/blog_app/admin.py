@@ -2,7 +2,7 @@ from import_export import resources
 from import_export.admin import ImportExportModelAdmin
 from tinymce.widgets import TinyMCE
 
-from blog_app.helpers import get_user_blog
+from blog_app.utils.helpers import get_user_blog
 
 from .models import Blog, Post, Tag
 
@@ -76,8 +76,9 @@ class PostAdmin(ImportExportModelAdmin):
 @admin.register(Blog)
 class BlogAdmin(admin.ModelAdmin):
     list_display = (
-        "title",
         "user",
+        "title",
+        "description",
         "created_at",
         "updated_at",
     )  # Mostrar título y dueño del blog
