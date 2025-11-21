@@ -1,4 +1,4 @@
-from auth_app.helpers import check_user_authenticated
+from auth_app.utils.helpers import check_user_authenticated
 import graphene  # pyright: ignore[reportMissingImports]
 from rest_framework.exceptions import PermissionDenied
 
