@@ -1,4 +1,5 @@
 import graphene  # pyright: ignore[reportMissingImports]
+import graphql_jwt  # pyright: ignore[reportMissingImports]
 from rest_framework_simplejwt.tokens import (  # pyright: ignore[reportMissingImports]
     RefreshToken,  # pyright: ignore[reportMissingImports]
 )
@@ -44,3 +45,5 @@ class RegisterUser(graphene.Mutation):
 
 class AuthMutation(graphene.ObjectType):
     register_user = RegisterUser.Field()
+    login_token_auth = graphql_jwt.ObtainJSONWebToken.Field()
+    refresh_token = graphql_jwt.Refresh.Field()

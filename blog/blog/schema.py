@@ -1,21 +1,19 @@
 from auth_app.schema import AuthMutation
 import graphene  # pyright: ignore[reportMissingImports]
 
-from blog_app.schema.mutations import (  # pyright: ignore[reportMissingImports]
-    Mutation as BlogMutation,  # pyright: ignore[reportMissingImports]
-)
-from blog_app.schema.queries import (  # pyright: ignore[reportMissingImports]
-    BlogQuery,
-    PostQuery,
-    TagQuery,
-)
+from blog_app.schema import BlogMutation
+from blog_app.schema.queries import Query as AllQuery
 
 
-class Query(BlogQuery, PostQuery, TagQuery, graphene.ObjectType):
+class Query(AllQuery, graphene.ObjectType):
+    """Combines all query classes into a single Query type."""
+
     pass
 
 
 class Mutation(BlogMutation, AuthMutation, graphene.ObjectType):
+    """Combines all mutation classes into a single Mutation type."""
+
     pass
 
 
