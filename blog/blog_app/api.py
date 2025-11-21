@@ -3,8 +3,8 @@ from rest_framework import generics, viewsets
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.permissions import AllowAny, IsAuthenticated
 
-from blog_app.constants import ERROR_BLOG_USER_HAS_BLOG
-from blog_app.helpers import (
+from blog_app.utils.constants import ERROR_BLOG_USER_HAS_BLOG
+from blog_app.utils.helpers import (
     get_or_create_tag,
     get_user_blog,
     validate_posts_for_user,

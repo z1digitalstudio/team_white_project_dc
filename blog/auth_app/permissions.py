@@ -1,6 +1,11 @@
 from rest_framework import permissions
 
-from .helpers import is_authenticated, is_owner, is_owner_of_any_post, is_superuser
+from auth_app.utils.helpers import (
+    is_authenticated,
+    is_owner,
+    is_owner_of_any_post,
+    is_superuser,
+)
 
 
 # Clase para verificar si el usuario es propietario del objeto o admin

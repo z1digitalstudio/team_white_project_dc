@@ -3,7 +3,7 @@ from graphql_jwt.shortcuts import (  # pyright: ignore[reportMissingImports]
     get_user_by_token,  # pyright: ignore[reportMissingImports]
 )
 
-from blog_app.constants import ERROR_NOT_OBTAIN_USER_BYTOKEN
+from auth_app.utils.constants import ERROR_NOT_OBTAIN_USER_BYTOKEN
 
 
 class CustomGraphQLView(GraphQLView):

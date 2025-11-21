@@ -1,8 +1,8 @@
-from auth_app.helpers import admin_permissions, create_user
+from auth_app.utils.helpers import admin_permissions, create_user
 from rest_framework import serializers
 
-from blog_app.helpers import get_user_blog
 from blog_app.models import Blog, Post, Tag
+from blog_app.utils.helpers import get_user_blog
 
 from django.contrib.auth.models import User
 
