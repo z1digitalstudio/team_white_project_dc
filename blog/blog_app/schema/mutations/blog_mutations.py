@@ -8,7 +8,9 @@ from blog_app.utils.constants import (
     DEFAULT_BLOG_DESCRIPTION,
     ERROR_BLOG_NOT_FOUND,
     ERROR_BLOG_USER_HAS_BLOG,
+    ERROR_DONT_HAVE_PERMISSION_TO_EDIT_BLOG,
     SUCCESS_BLOG_CREATED,
+    SUCCESS_BLOG_UPDATED,
 )
 
 
@@ -19,6 +21,7 @@ class CreateBlog(graphene.Mutation):
 
     blog = graphene.Field(BlogType)
     errors = graphene.List(graphene.String)
+    message = graphene.String()
 
     def mutate(self, info, title, description=None):  # noqa: PLR6301
         user = check_user_authenticated(info)
@@ -39,9 +42,7 @@ class CreateBlog(graphene.Mutation):
             return CreateBlog(blog=blog, errors=[])
 
         errors = [f"{f}: {', '.join(msgs)}" for f, msgs in serializer.errors.items()]
-        return CreateBlog(
-            blog=None, errors=errors, success_message=SUCCESS_BLOG_CREATED
-        )
+        return CreateBlog(blog=None, errors=errors, message=SUCCESS_BLOG_CREATED)
 
 
 class UpdateBlog(graphene.Mutation):
@@ -52,6 +53,7 @@ class UpdateBlog(graphene.Mutation):
 
     blog = graphene.Field(BlogType)
     errors = graphene.List(graphene.String)
+    message = graphene.String()
 
     def mutate(self, info, id, title=None, description=None):  # noqa: PLR6301
         user = check_user_authenticated(info)
@@ -64,7 +66,7 @@ class UpdateBlog(graphene.Mutation):
         # Validación de propietario
         if not user.is_superuser and blog.user != user:
             return UpdateBlog(
-                blog=None, errors=["No tienes permiso para editar este blog"]
+                blog=None, errors=[ERROR_DONT_HAVE_PERMISSION_TO_EDIT_BLOG]
             )
 
         data = {
@@ -77,7 +79,7 @@ class UpdateBlog(graphene.Mutation):
 
         if serializer.is_valid():
             blog = serializer.save()
-            return UpdateBlog(blog=blog, errors=[])
+            return UpdateBlog(blog=blog, errors=[], message=SUCCESS_BLOG_UPDATED)
 
         errors = [f"{f}: {', '.join(msgs)}" for f, msgs in serializer.errors.items()]
         return UpdateBlog(blog=None, errors=errors)

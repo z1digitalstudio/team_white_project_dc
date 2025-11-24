@@ -2,10 +2,15 @@ from auth_app.utils.helpers import check_user_authenticated
 import graphene  # pyright: ignore[reportMissingImports]
 from rest_framework.exceptions import PermissionDenied
 
-from blog_app.models import Post, Tag
+from blog_app.models import Post
 from blog_app.schema.types import PostType
 from blog_app.serializers import PostSerializer
-from blog_app.utils.constants import ERROR_POST_NOT_FOUND
+from blog_app.utils.constants import (
+    ERROR_POST_NOT_FOUND,
+    SUCCESS_POST_CREATED,
+    SUCCESS_POST_DELETED,
+    SUCCESS_POST_UPDATED,
+)
 from blog_app.utils.helpers import get_user_blog, validate_posts_for_user
 
 
@@ -13,38 +18,30 @@ class CreatePost(graphene.Mutation):
     class Arguments:
         title = graphene.String(required=True)
         content = graphene.String(required=True)
-        tag_ids = graphene.List(graphene.Int, required=False)
 
     post = graphene.Field(PostType)
     errors = graphene.List(graphene.String)
+    message = graphene.String()
 
-    def mutate(self, info, title, content, tag_ids=None):  # noqa: PLR6301
+    def mutate(self, info, title, content):  # noqa: PLR6301
         user = check_user_authenticated(info)
 
-        # Obtener blog y validar
         try:
             blog = get_user_blog(user)
         except PermissionDenied as e:
-            return CreatePost(post=None, errors=[str(e)])
+            return CreatePost(post=None, errors=[str(e)], message=None)
 
-        # Serializador DRF
         serializer = PostSerializer(
-            data={"title": title, "content": content}, context={"request": info.context}
+            data={"title": title, "content": content},
+            context={"request": info.context},
         )
 
         if serializer.is_valid():
             post = serializer.save(blog=blog)
-
-            # Asociar tags si se pasan
-            if tag_ids:
-                posts_tags_qs = Post.objects.filter(id__in=tag_ids)
-                validate_posts_for_user(user, posts_tags_qs)
-                post.tags.set(posts_tags_qs)
-
-            return CreatePost(post=post, errors=[])
+            return CreatePost(post=post, errors=[], message=SUCCESS_POST_CREATED)
 
         errors = [f"{f}: {', '.join(msgs)}" for f, msgs in serializer.errors.items()]
-        return CreatePost(post=None, errors=errors)
+        return CreatePost(post=None, errors=errors, message=None)
 
 
 class UpdatePost(graphene.Mutation):
@@ -52,21 +49,25 @@ class UpdatePost(graphene.Mutation):
         id = graphene.ID(required=True)
         title = graphene.String(required=False)
         content = graphene.String(required=False)
-        tag_ids = graphene.List(graphene.Int, required=False)
 
     post = graphene.Field(PostType)
     errors = graphene.List(graphene.String)
+    message = graphene.String()
 
-    def mutate(self, info, id, title=None, content=None, tag_ids=None):  # noqa: PLR6301
+    def mutate(self, info, id, title=None, content=None):  # noqa: PLR6301
         user = check_user_authenticated(info)
 
         try:
             post = Post.objects.get(id=id)
         except Post.DoesNotExist:
-            return UpdatePost(post=None, errors=[ERROR_POST_NOT_FOUND])
+            return UpdatePost(post=None, errors=[ERROR_POST_NOT_FOUND], message=None)
 
         # Validación de permisos
-        validate_posts_for_user(user, Post.objects.filter(id=id))
+        post_ids = [id]
+        posts_qs = Post.objects.filter(id__in=post_ids)
+
+        # Validación de permisos
+        validate_posts_for_user(user, post_ids, posts_qs)
 
         data = {
             "title": title if title is not None else post.title,
@@ -77,23 +78,18 @@ class UpdatePost(graphene.Mutation):
 
         if serializer.is_valid():
             post = serializer.save()
-
-            if tag_ids is not None:
-                tags = Tag.objects.filter(id__in=tag_ids)
-                post.tags.set(tags)
-
-            return UpdatePost(post=post, errors=[])
+            return UpdatePost(post=post, errors=[], message=SUCCESS_POST_UPDATED)
 
         errors = [f"{f}: {', '.join(msgs)}" for f, msgs in serializer.errors.items()]
-        return UpdatePost(post=None, errors=errors)
+        return UpdatePost(post=None, errors=errors, message=None)
 
 
 class DeletePost(graphene.Mutation):
     class Arguments:
         id = graphene.ID(required=True)
 
-    ok = graphene.Boolean()
     errors = graphene.List(graphene.String)
+    message = graphene.String()
 
     def mutate(self, info, id):  # noqa: PLR6301
         user = check_user_authenticated(info)
@@ -101,10 +97,11 @@ class DeletePost(graphene.Mutation):
         try:
             post = Post.objects.get(id=id)
         except Post.DoesNotExist:
-            return DeletePost(ok=False, errors=[ERROR_POST_NOT_FOUND])
+            return DeletePost(errors=[ERROR_POST_NOT_FOUND], message=None)
 
-        # Validar permisos
-        validate_posts_for_user(user, Post.objects.filter(id=id))
+        post_ids = [id]
+        posts_qs = Post.objects.filter(id=id)
+        validate_posts_for_user(user, post_ids, posts_qs)
 
         post.delete()
-        return DeletePost(ok=True, errors=[])
+        return DeletePost(errors=[], message=SUCCESS_POST_DELETED)

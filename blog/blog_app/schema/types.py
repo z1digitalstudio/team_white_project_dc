@@ -4,7 +4,6 @@ from graphene_django import DjangoObjectType  # pyright: ignore[reportMissingImp
 from blog_app.models import Blog, Post, Tag
 
 
-# === Tipos (equivalentes a serializers, pero para GraphQL) ===
 class UserType(graphene.ObjectType):
     id = graphene.ID()
     username = graphene.String()

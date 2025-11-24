@@ -4,7 +4,12 @@ from rest_framework.exceptions import PermissionDenied
 
 from blog_app.models import Post, Tag
 from blog_app.schema.types import TagType
-from blog_app.utils.constants import ERROR_TAG_NOT_FOUND
+from blog_app.utils.constants import (
+    ERROR_TAG_NOT_FOUND,
+    SUCCESS_TAG_CREATED,
+    SUCCESS_TAG_DELETED,
+    SUCCESS_TAG_UPDATED,
+)
 from blog_app.utils.helpers import (
     get_or_create_tag,
     get_user_blog,
@@ -19,25 +24,27 @@ class CreateTag(graphene.Mutation):
 
     tag = graphene.Field(TagType)
     errors = graphene.List(graphene.String)
+    message = graphene.String()
 
     def mutate(self, info, name, post_ids):  # noqa: PLR6301
         user = check_user_authenticated(info)
 
-        # Validar blog del usuario
         try:
             blog = get_user_blog(user)
         except PermissionDenied as e:
-            return CreateTag(tag=None, errors=[str(e)])
+            return CreateTag(tag=None, errors=[str(e)], message=None)
 
-        # Obtener posts y validar propiedad
         posts_qs = Post.objects.filter(id__in=post_ids)
-        validate_posts_for_user(user, posts_qs)
 
-        # Crear tag usando helper
+        try:
+            validate_posts_for_user(user, post_ids, posts_qs)
+        except (ValueError, PermissionDenied) as e:
+            return CreateTag(tag=None, errors=[str(e)], message=None)
+
         tag = get_or_create_tag(blog, name)
         tag.posts.set(posts_qs)
 
-        return CreateTag(tag=tag, errors=[])
+        return CreateTag(tag=tag, errors=[], message=SUCCESS_TAG_CREATED)
 
 
 class UpdateTag(graphene.Mutation):
@@ -48,6 +55,7 @@ class UpdateTag(graphene.Mutation):
 
     tag = graphene.Field(TagType)
     errors = graphene.List(graphene.String)
+    message = graphene.String()
 
     def mutate(self, info, id, name=None, post_ids=None):  # noqa: PLR6301
         user = check_user_authenticated(info)
@@ -55,39 +63,53 @@ class UpdateTag(graphene.Mutation):
         try:
             tag = Tag.objects.get(id=id)
         except Tag.DoesNotExist:
-            return UpdateTag(tag=None, errors=[ERROR_TAG_NOT_FOUND])
+            return UpdateTag(tag=None, errors=[ERROR_TAG_NOT_FOUND], message=None)
 
-        # Validar permisos
-        validate_posts_for_user(user, tag.posts.all())
+        if not user.is_superuser and tag.blog.user != user:
+            return UpdateTag(tag=None, errors=[ERROR_TAG_NOT_FOUND], message=None)
 
         if name:
             tag.name = name
             tag.save()
 
         if post_ids is not None:
-            posts = Post.objects.filter(id__in=post_ids)
-            validate_posts_for_user(user, posts)
-            tag.posts.set(posts)
+            posts_qs = Post.objects.filter(id__in=post_ids)
 
-        return UpdateTag(tag=tag, errors=[])
+            try:
+                validate_posts_for_user(user, post_ids, posts_qs)
+            except (ValueError, PermissionDenied) as e:
+                return UpdateTag(tag=None, errors=[str(e)], message=None)
+
+            tag.posts.set(posts_qs)
+
+        return UpdateTag(tag=tag, errors=[], message=SUCCESS_TAG_UPDATED)
 
 
 class DeleteTag(graphene.Mutation):
     class Arguments:
         id = graphene.ID(required=True)
+        post_ids = graphene.List(graphene.Int, required=False)
 
-    ok = graphene.Boolean()
     errors = graphene.List(graphene.String)
+    message = graphene.String()
 
-    def mutate(self, info, id):  # noqa: PLR6301
+    def mutate(self, info, id, post_ids=None):  # noqa: PLR6301
         user = check_user_authenticated(info)
 
         try:
             tag = Tag.objects.get(id=id)
         except Tag.DoesNotExist:
-            return DeleteTag(ok=False, errors=["Tag no encontrado"])
+            return DeleteTag(errors=[ERROR_TAG_NOT_FOUND])
 
-        validate_posts_for_user(user, tag.posts.all())
+        if not user.is_superuser and tag.blog.user != user:
+            return DeleteTag(errors=[ERROR_TAG_NOT_FOUND])
+
+        if post_ids is not None:
+            posts_qs = Post.objects.filter(id__in=post_ids)
+            try:
+                validate_posts_for_user(user, post_ids, posts_qs)
+            except (ValueError, PermissionDenied) as e:
+                return DeleteTag(errors=[str(e)])
 
         tag.delete()
-        return DeleteTag(ok=True, errors=[])
+        return DeleteTag(errors=[], message=SUCCESS_TAG_DELETED)
