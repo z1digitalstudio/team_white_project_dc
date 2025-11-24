@@ -4,6 +4,7 @@ from rest_framework_simplejwt.tokens import (  # pyright: ignore[reportMissingIm
     RefreshToken,  # pyright: ignore[reportMissingImports]
 )
 
+from auth_app.utils.constants import SUCCESS_USER_CREATED
 from blog_app.schema.types import UserType
 from blog_app.serializers import RegisterSerializer
 
@@ -17,8 +18,9 @@ class RegisterUser(graphene.Mutation):
     # --- Outputs ---
     user = graphene.Field(UserType)
     token = graphene.String()  # JWT
-    refresh_token = graphene.String()  # JWT refresh
+    refresh_token = graphene.String()
     errors = graphene.List(graphene.String)
+    message = graphene.String()
 
     def mutate(self, info, username, password, email=None):  # noqa: PLR6301
         data = {"username": username, "email": email, "password": password}
@@ -33,7 +35,11 @@ class RegisterUser(graphene.Mutation):
             refresh_token = str(refresh)
 
             return RegisterUser(
-                user=user, token=access_token, refresh_token=refresh_token, errors=[]
+                user=user,
+                token=access_token,
+                refresh_token=refresh_token,
+                errors=[],
+                message=SUCCESS_USER_CREATED,
             )
 
         # Si hay errores de validación
