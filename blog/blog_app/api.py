@@ -21,8 +21,6 @@ from .serializers import (
 from django.contrib.auth.models import User
 
 
-# --- ViewSets ---
-# ViewSet para Blog
 class BlogViewSet(viewsets.ModelViewSet):
     serializer_class = BlogSerializer
     permission_classes = [IsOwnerOrAdmin]
@@ -42,7 +40,6 @@ class BlogViewSet(viewsets.ModelViewSet):
         serializer.save(user=user)
 
 
-# ViewSet para Post
 class PostViewSet(viewsets.ModelViewSet):
     serializer_class = PostSerializer
     permission_classes = [IsBlogOwnerOrAdmin]
@@ -59,7 +56,6 @@ class PostViewSet(viewsets.ModelViewSet):
         serializer.save(blog=blog)
 
 
-# ViewSet para Tag
 class TagViewSet(viewsets.ModelViewSet):
     serializer_class = TagSerializer
     permission_classes = [IsAuthenticated]
@@ -83,10 +79,8 @@ class TagViewSet(viewsets.ModelViewSet):
 
         validate_posts_for_user(user, post_ids, posts_qs)
 
-        # Crear o obtener tag
         tag = get_or_create_tag(blog, name)
 
-        # Asociar posts
         tag.posts.add(*posts)
 
         serializer.instance = tag
@@ -95,4 +89,4 @@ class TagViewSet(viewsets.ModelViewSet):
 class RegisterView(generics.CreateAPIView):
     queryset = User.objects.all()
     serializer_class = RegisterSerializer
-    permission_classes = [AllowAny]  # cualquiera puede registrarse
+    permission_classes = [AllowAny]

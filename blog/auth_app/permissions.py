@@ -8,10 +8,7 @@ from auth_app.utils.helpers import (
 )
 
 
-# Clase para verificar si el usuario es propietario del objeto o admin
 class IsOwnerOrAdmin(permissions.BasePermission):
-    """Permiso para superusuarios o propietarios del objeto"""
-
     def has_permission(self, request, view):  # noqa: PLR6301
         return is_authenticated(request.user)
 
@@ -20,10 +17,7 @@ class IsOwnerOrAdmin(permissions.BasePermission):
         return is_superuser(user) or is_owner(user, obj)
 
 
-# Clase para verificar si el usuario es propietario del blog o admin
 class IsBlogOwnerOrAdmin(permissions.BasePermission):
-    """Permiso para recursos relacionados con blogs"""
-
     def has_permission(self, request, view):  # noqa: PLR6301
         return is_authenticated(request.user)
 
@@ -38,10 +32,7 @@ class IsBlogOwnerOrAdmin(permissions.BasePermission):
         return False
 
 
-# Clase para verificar si el usuario está autenticado o es propietario del objeto
 class IsAuthenticatedOrReadOnlyOwner(permissions.BasePermission):
-    """Permiso que restringe acceso a recursos propios"""
-
     def has_permission(self, request, view):  # noqa: PLR6301
         return is_authenticated(request.user)
 

@@ -8,11 +8,7 @@ from auth_app.utils.constants import ERROR_NOT_OBTAIN_USER_BYTOKEN
 
 class CustomGraphQLView(GraphQLView):
     def get_context(self, request):  # noqa: PLR6301
-        """
-        Asegura que info.context.user sea el usuario autenticado por JWT
-        si el middleware no lo resuelve automáticamente.
-        """
-        # Si el middleware no lo hace, lo intentamos manualmente:
+        # If the middleware doesn't resolve the user by token, try manually:
         auth = request.headers.get("authorization", "")
         if auth.startswith("Bearer "):
             token = auth.split("Bearer ")[1]
