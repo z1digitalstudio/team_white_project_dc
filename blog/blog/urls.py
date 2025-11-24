@@ -34,29 +34,27 @@ from django.views.decorators.csrf import csrf_exempt
 
 # Crear router automáticamente
 router = routers.DefaultRouter()
-router.register(
-    r"blogs", BlogViewSet, basename="blog"
-)  # r" es para escapar el carácter ". basename si viewset ya no devuelve Blog.objects.all() por defecto
+router.register(r"blogs", BlogViewSet, basename="blog")
 router.register(r"posts", PostViewSet, basename="post")
 router.register(r"tags", TagViewSet, basename="tag")
 
 
 urlpatterns = [
-    path("admin/", admin.site.urls),  # Panel de administración
-    path("tinymce/", include("tinymce.urls")),  # Rutas de TinyMCE
+    path("admin/", admin.site.urls),
+    path("tinymce/", include("tinymce.urls")),
     path("api/", include(router.urls)),  # API REST
-    path("api-auth/", include("rest_framework.urls")),  # Login para DRF
-    path("api/register/", RegisterView.as_view(), name="register"),  # registro
-    path("", include("blog_app.urls")),  # Rutas normales del blog
+    path("api-auth/", include("rest_framework.urls")),  # Login for DRF
+    path("api/register/", RegisterView.as_view(), name="register"),
+    path("", include("blog_app.urls")),  # Blog app urls
     # Endpoints JWT
     path("api/token/", TokenObtainPairView.as_view(), name="token_obtain_pair"),
     path("api/token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
-    # GraphQL (NO usa router)
+    # GraphQL (does not use router)
     path(
         "graphql/", csrf_exempt(CustomGraphQLView.as_view(graphiql=True, schema=schema))
     ),
 ]
-# Generar la documentación de la API con Swagger
+# Generate the API documentation with Swagger
 schema_view = get_schema_view(
     openapi.Info(
         title="Blog CMS API",

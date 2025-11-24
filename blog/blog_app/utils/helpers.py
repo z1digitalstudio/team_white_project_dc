@@ -9,7 +9,6 @@ from .constants import (
 )
 
 
-# --- Funciones auxiliares del blog ---
 def get_user_blog(user):
     try:
         return user.blog

@@ -2,6 +2,6 @@
 from django.http import HttpResponse
 
 
-# Vista creada como ejemplo para evitar el error 404
+# View created as an example to avoid the 404 error
 def home(request):
-    return HttpResponse("Blog")
+    return HttpResponse(" ")

@@ -62,11 +62,9 @@ class UpdatePost(graphene.Mutation):
         except Post.DoesNotExist:
             return UpdatePost(post=None, errors=[ERROR_POST_NOT_FOUND], message=None)
 
-        # Validación de permisos
         post_ids = [id]
         posts_qs = Post.objects.filter(id__in=post_ids)
 
-        # Validación de permisos
         validate_posts_for_user(user, post_ids, posts_qs)
 
         data = {

@@ -5,15 +5,15 @@ from blog_app.schema import BlogMutation
 from blog_app.schema.queries import Query as AllQuery
 
 
-class Query(AllQuery, graphene.ObjectType):
-    """Combines all query classes into a single Query type."""
-
+class Query(
+    AllQuery, graphene.ObjectType
+):  # Combine all query classes into a single Query type
     pass
 
 
-class Mutation(BlogMutation, AuthMutation, graphene.ObjectType):
-    """Combines all mutation classes into a single Mutation type."""
-
+class Mutation(
+    BlogMutation, AuthMutation, graphene.ObjectType
+):  # Combine all mutation classes into a single Mutation type
     pass
 
 
