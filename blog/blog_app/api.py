@@ -76,11 +76,12 @@ class TagViewSet(viewsets.ModelViewSet):
         posts = data.get("posts", [])
         name = data.get("name")
 
-        # Obtener y validar blog del usuario
         blog = get_user_blog(user)
 
-        # Validar que los posts pertenezcan al usuario
-        validate_posts_for_user(user, posts)
+        post_ids = [post.id for post in posts]
+        posts_qs = Post.objects.filter(id__in=post_ids)
+
+        validate_posts_for_user(user, post_ids, posts_qs)
 
         # Crear o obtener tag
         tag = get_or_create_tag(blog, name)
