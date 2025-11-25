@@ -28,6 +28,8 @@ Asegúrate de tener instalado:
 - **Docker 20+**
 - **Docker Compose 2+**
 
+---
+
 ## Instalación y Configuración
 
 ### 1. Clonar el repositorio
@@ -37,7 +39,7 @@ git clone https://github.com/danielachg28/proyecto1-blog-cms.git
 cd blog-cms
 ```
 
-## 2. Configuración del entorno
+### 2. Configuración del entorno
 
 Este proyecto utiliza variables de entorno definidas en un archivo `.env`.
 **Por seguridad, los archivos `.env` no se incluyen en el repositorio.**
@@ -132,7 +134,7 @@ Respuesta esperada:
 
 ---
 
-## Autenticación
+### Autenticación
 
 Para realizar peticiones a la API (crear posts, blogs, tags), es necesario autenticarse:
 
@@ -142,12 +144,12 @@ Para realizar peticiones a la API (crear posts, blogs, tags), es necesario auten
 
 ---
 
-## Panel de Administración
+### Panel de Administración
 
 Acceso al panel administrativo:
 
 [http://127.0.0.1:8000/admin/](http://127.0.0.1:8000/admin/)
-
+[https://teamwhiteprojectdc-production.up.railway.app/admin/](https://teamwhiteprojectdc-production.up.railway.app/admin/)
 
 Desde el admin se puede:
 
@@ -155,7 +157,7 @@ Desde el admin se puede:
 * Editar contenido con **TinyMCE**
 * Exportar datos con **django-import-export**
 
-## Pruebas de la API (DRF)
+### Pruebas de la API (DRF)
 
 Cómo probar con Postman
 
@@ -174,13 +176,27 @@ Key: Authorization
 Value: Bearer <tu_token_access>
 Para todas las consultas
 
+3. Crear Blog
+POST /api/blogs/
 
-3. Crear post
+{
+  "title": "Titulo de blog",
+  "description": "Contenido del blog"
+}
+
+4. Crear post
 POST /api/posts/
 
 {
   "title": "Primer post",
   "content": "Contenido del post"
+}
+
+5. Crear tag
+POST /api/tags/
+{
+  "name": "django",
+  "posts": []
 }
 
 ## API REST (GraphQL)
@@ -199,9 +215,9 @@ POST /api/posts/
 | allTags      | Query    | Obtener todas las etiquetas          | ✅ Sí          |
 
 
-## Pruebas de la API (GRAPHQL)
+### Pruebas de la API (GRAPHQL)
 
-# Como probar con Postman (GraphQL):
+## Como probar con Postman (GraphQL):
 - Seleccionar pestaña de GraphQL y se visualizarán las queries
 
 - en la casilla de url: Método: POST  https://teamwhiteprojectdc-production.up.railway.app/graphql/
@@ -213,7 +229,7 @@ POST /api/posts/
 -Realizar las consultas
 
 
-# Como probar con GraphQL interfaz:
+## Como probar con GraphQL interfaz:
 
 - Acceder a https://teamwhiteprojectdc-production.up.railway.app/graphql/
 
@@ -222,19 +238,14 @@ POST /api/posts/
   "Authorization": "Bearer <token>"
 }
 
-# Consultas (Postman e intefaz):
+## Consultas (Postman e intefaz):
 
 1. Registrar un usuario
 mutation {
   registerUser(username: "usuario", email: "usuario@mail.com", password: "123456") {
-    user {
-      id
-      username
-      email
-    }
     token
-    refreshToken
     errors
+    message
   }
 }
 
@@ -251,6 +262,8 @@ mutation {
     id
     title
     description
+    createdAt
+    updatedAt
   }
 }
 
@@ -290,61 +303,79 @@ mutation {
 mutation CreateBlog {
     createBlog(title: "Blog del usuario", description: "Descripción del blog") {
         errors
-        blog {
-            id
-            title
-            description
-        }
+        message
     }
 }
 
+7. Actualizar un blog
+mutation UpdateBlog {
+    updateBlog(id: "1", description: "nueva descripción", title: "nuevo título") {
+        errors
+        message
+    }
+}
 
-7. Crear un post
+8. Crear un post
 mutation {
   createPost(
     title: "Título del post",
     content: "Contenido del post",
   ) {
-    post {
-      id
-      title
-      content
-      blog {
-        id
-        title
-      }
-      tags {
-        id
-        name
-      }
-    }
     errors
+    message
   }
 }
 
-8. Crear un tag:
+9. Actualizar un post
+mutation UpdatePost {
+    updatePost(id: "1", content: "contenido", title: "título") {
+        errors
+        message
+    }
+}
+
+10. Eliminar un post
+mutation DeletePost {
+    deletePost(id: "1") {
+        errors
+        message
+    }
+}
+
+11. Crear un tag:
 mutation {
   createTag(
     name: "python"
     postIds: [19, 30]  # IDs de los posts que se quiere asociar
   ) {
-    tag {
-      id
-      name
-      posts {
-        id
-        title
-      }
-    }
     errors
+    message
   }
 }
 
+12. Actualizar un tag
+mutation UpdateTag {
+    updateTag(id: "1", name: "pythonic") {
+        errors
+        message
+    }
+}
+
+13. Eliminar un tag
+mutation DeleteTag {
+    deleteTag(id: "1") {
+        errors
+        message
+    }
+}
 
 ## Documentación de la API
 
 * **Swagger UI:** [http://127.0.0.1:8000/swagger/](http://127.0.0.1:8000/swagger/)
+* **Swagger UI:** [https://teamwhiteprojectdc-production.up.railway.app/swagger/](https://teamwhiteprojectdc-production.up.railway.app/swagger/)
+
 * **Redoc UI:** [http://127.0.0.1:8000/redoc/](http://127.0.0.1:8000/redoc/)
+* **Redoc UI:** [https://teamwhiteprojectdc-production.up.railway.app/swagger/](https://teamwhiteprojectdc-production.up.railway.app/swagger/)
 
 Ambas interfaces permiten probar los endpoints directamente desde el navegador.
 
@@ -365,15 +396,17 @@ Ambas interfaces permiten probar los endpoints directamente desde el navegador.
 │   │   ├── urls.py               # URLs raíz del proyecto
 │   │   ├── wsgi.py               # Entrada WSGI (para Gunicorn u otros)
 │   │   └── asgi.py               # Entrada ASGI (para Django Channels o async)
+│   │   └── Schema.py             # Schema root
 │   │
 │   ├── auth_app/                 # Aplicación
 │   │   ├── __init__.py
+│   │   ├── schema/               # Schema de users
+│   │   │   ├── __init__.py
+│   │   │   ├── mutations.py      # Mutations de users
 │   │   ├── apps.py
-│   │   ├── models.py
-│   │   ├── constants.py
-│   │   ├── helpers.py
-│   │   ├── admin.py
-│   │   ├── tests.py
+│   │   ├── utils/                # Utils
+│   │   │   ├─-helpers.py         #Funciones auxiliares de users
+│   │   │   ├── constants.py      # Constantes para users
 │   │   ├── views_graphql.py
 │   │   └── permissions.py
 |   |
@@ -382,14 +415,19 @@ Ambas interfaces permiten probar los endpoints directamente desde el navegador.
 │   │   ├── apps.py
 │   │   ├── models.py
 │   │   ├── serializers.py
-│   │   ├── constants.py
-│   │   ├── helpers.py
+│   │   ├── utils/                # Utils
+│   │   │   ├─-helpers.py         #Funciones auxiliares de blog
+│   │   │   ├── constants.py      # Constantes para blog
 │   │   ├── api.py
-│   │   ├── schema.py
 │   │   ├── admin.py
+│   │   ├── schema/               # Schema de blog
+│   │   │   ├── __init__.py
+│   │   │   ├── mutations/      # Mutations de blog
+│   │   │       ├── blog_mutations.py  # Mutations de blog
+│   │   │       ├── post_mutations.py  # Mutations de post
+│   │   │       ├── tag_mutations.py   # Mutations de tag
 │   │   ├── urls.py
 │   │   ├── views.py
-│   │   └── permissions.py
 │   │
 │   ├── tests/                    # Pruebas unitarias y de integración
 │   │   ├── __init__.py
