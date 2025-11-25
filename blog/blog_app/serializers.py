@@ -34,6 +34,7 @@ class PostSerializer(serializers.ModelSerializer):
 
 class BlogSerializer(serializers.ModelSerializer):
     posts = PostSerializer(many=True, read_only=True)
+    description = serializers.CharField(required=False, allow_blank=True)
 
     class Meta:
         model = Blog
